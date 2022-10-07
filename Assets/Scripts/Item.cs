@@ -1,3 +1,11 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:bab25b4bfb09413a3088ab5e28ddec8590e8fd0058d9f072be42779a21e3b889
-size 288
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "Item", menuName = "ScriptableObjects/Item", order = 1)]
+public class Item : ScriptableObject
+{
+    public int ID;
+    public Sprite Icon;
+    public string Name;
+}
