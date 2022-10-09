@@ -10,9 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 763ac1c7d4552b7489d63ce57d19155e, type: 3}
-  m_Name: Item 1
+  m_Name: DestroyType
   m_EditorClassIdentifier: 
-  ID: 2
-  Icon: {fileID: 21300000, guid: e3b93389a34089149b0e6057934635e3, type: 3}
-  Name: Biscuit
+  ID: 7
+  Icon: {fileID: 21300000, guid: 3e6802a81e6f720499729b0a8bb806ba, type: 3}
+  Name: DestroyType
   IsSpecial: 0
+  itemType: 2

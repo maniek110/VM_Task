@@ -8,4 +8,11 @@ public class Item : ScriptableObject
     public int ID;
     public Sprite Icon;
     public string Name;
+    public ItemType itemType = ItemType.Normal;
+}
+public enum ItemType
+{
+    Normal,
+    Bomb,
+    DestroyTheSame
 }
