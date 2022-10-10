@@ -64,17 +64,17 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private void SetActiveField(GameObject field)
+    private void SetActiveField(GameObject _field)
     {
         _audioSource.PlayOneShot(_audioBank.GetSound(AudioType.Select).Sound);
-        GetFieldPos(field, out int x, out int y);
+        GetFieldPos(_field, out int x, out int y);
         //is current null then set clicked field current
         if (_currentActiveFIeld.Item1 == null)
         {
             _currentActiveFIeld.Item1 = x;
             _currentActiveFIeld.Item2 = y;
             _currentFieldType = GetItemType(_itemIdArray[x, y]);
-            FieldContainer tempFieldContainer = field.GetComponent<FieldContainer>();
+            FieldContainer tempFieldContainer = _field.GetComponent<FieldContainer>();
             tempFieldContainer.BorderImage.gameObject.SetActive(!tempFieldContainer.BorderImage.gameObject.activeSelf);
         }
         else if (_currentActiveFIeld.Item1 == x && _currentActiveFIeld.Item2 == y)//diselect field when clicked the same field
@@ -82,38 +82,38 @@ public class BoardManager : MonoBehaviour
             _currentActiveFIeld.Item1 = null;
             _currentActiveFIeld.Item2 = null;
             _currentFieldType = ItemType.Normal;
-            FieldContainer tempFieldContainer = field.GetComponent<FieldContainer>();
+            FieldContainer tempFieldContainer = _field.GetComponent<FieldContainer>();
             tempFieldContainer.BorderImage.gameObject.SetActive(!tempFieldContainer.BorderImage.gameObject.activeSelf);
         }
     }
 
-    private ItemType GetItemType(int id)
+    private ItemType GetItemType(int _id)
     {
-        return _items.Find(x => x.ID == id).itemType;
+        return _items.Find(x => x.ID == _id).itemType;
     }
 
-    private void GetFieldPos(GameObject field, out int x, out int y)
+    private void GetFieldPos(GameObject _field, out int _x, out int _y)
     {
-        x = 0;
-        y = 0;
+        _x = 0;
+        _y = 0;
         for (int i = 0; i < _rows.Count; i++)
         {
             RowController tempRow = _rows[i].GetComponent<RowController>();
             for (int j = 0; j < tempRow.Fields.Count; j++)
             {
-                if (field.GetInstanceID() == tempRow.Fields[j].GetInstanceID())
+                if (_field.GetInstanceID() == tempRow.Fields[j].GetInstanceID())
                 {
-                    y = i;
-                    x = j;
+                    _y = i;
+                    _x = j;
                     break;
                 }
             }
         }
     }
 
-    private void TrySwap(GameObject field)
+    private void TrySwap(GameObject _field)
     {
-        GetFieldPos(field, out int x, out int y);
+        GetFieldPos(_field, out int x, out int y);
         //is any field selected && are we clicking the same field
         if (_currentActiveFIeld.Item1 != null && !(_currentActiveFIeld == (x, y)))
         {
@@ -121,22 +121,22 @@ public class BoardManager : MonoBehaviour
             {
                 if (y == _currentActiveFIeld.Item2 - 1)
                 {
-                    Swap(field, x, y);
+                    Swap(_field, x, y);
                 }
                 else if (y == _currentActiveFIeld.Item2 + 1)
                 {
-                    Swap(field, x, y);
+                    Swap(_field, x, y);
                 }
             }
             if (y == _currentActiveFIeld.Item2)
             {
                 if (x == _currentActiveFIeld.Item1 - 1)
                 {
-                    Swap(field, x, y);
+                    Swap(_field, x, y);
                 }
                 else if (x == _currentActiveFIeld.Item1 + 1)
                 {
-                    Swap(field, x, y);
+                    Swap(_field, x, y);
                 }
             }
         }
@@ -168,18 +168,18 @@ public class BoardManager : MonoBehaviour
         VerifyBoard();
     }
 
-    private void DestroySameType(int x, int y)
+    private void DestroySameType(int _x, int _y)
     {
         int IdToFind = 99;
-        if ((GetItemType(_itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value]) == ItemType.DestroyTheSame)) IdToFind = _itemIdArray[x, y];
-        if ((GetItemType(_itemIdArray[x, y]) == ItemType.DestroyTheSame)) IdToFind = _itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value];
+        if ((GetItemType(_itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value]) == ItemType.DestroyTheSame)) IdToFind = _itemIdArray[_x, _y];
+        if ((GetItemType(_itemIdArray[_x, _y]) == ItemType.DestroyTheSame)) IdToFind = _itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value];
         List<(int, int)> toRemove = new List<(int, int)>();
         if (IdToFind != 99)
         {
             toRemove = GetFieldsOfType(IdToFind);
         }
         if (!toRemove.Contains((_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value))) toRemove.Add((_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value));
-        if (!toRemove.Contains((x, y))) toRemove.Add((x, y));
+        if (!toRemove.Contains((_x, _y))) toRemove.Add((_x, _y));
         toRemove.Sort(new MyComparer());
         if (toRemove.Count > 0)
         {
@@ -187,26 +187,25 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private List<(int, int)> GetFieldsOfType(int idToFind)
+    private List<(int, int)> GetFieldsOfType(int _idToFind)
     {
         List<(int, int)> cords = new List<(int, int)>();
         for (int x = 0; x < _itemIdArray.GetLength(0); x++)
         {
             for (int y = 0; y < _itemIdArray.GetLength(1); y++)
             {
-                if (_itemIdArray[x, y] == idToFind) cords.Add((x, y));
+                if (_itemIdArray[x, y] == _idToFind) cords.Add((x, y));
             }
         }
         return cords;
     }
 
-    private void BombEvent(int x, int y)
+    private void BombEvent(int _x, int _y)
     {
         List<(int, int)> centers = new List<(int, int)>();
         if ((GetItemType(_itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value]) == ItemType.Bomb)) centers.Add((_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value));
-        if ((GetItemType(_itemIdArray[x, y]) == ItemType.Bomb)) centers.Add((x, y));
+        if ((GetItemType(_itemIdArray[_x, _y]) == ItemType.Bomb)) centers.Add((_x, _y));
         List<(int, int)> toRemove = new List<(int, int)>();
-        Debug.Log(centers.Count);
         foreach ((int, int) cord in centers)
         {
             for (int i = cord.Item1 - 1; i <= cord.Item1 + 1; i++)
@@ -238,26 +237,26 @@ public class BoardManager : MonoBehaviour
         _currentActiveFIeld.Item1 = null;
     }
 
-    private Sprite GetRandomItem(out int id)
+    private Sprite GetRandomItem(out int _id)
     {
-        id = 0;
+        _id = 0;
         if (_items.Count > 0)
         {
             Item item = _items[UnityEngine.Random.RandomRange(0, _items.Count)];
-            id = item.ID;
+            _id = item.ID;
             return item.Icon;
         }
         return null;
     }
-    private Sprite GetItemById(int id, out int fieldid)
+    private Sprite GetItemById(int _id, out int _fieldid)
     {
-        Item item = _items[id];
-        fieldid = item.ID;
+        Item item = _items[_id];
+        _fieldid = item.ID;
         return item.Icon;
     }
-    private Sprite GetItemById(int id)
+    private Sprite GetItemById(int _id)
     {
-        Item item = _items.Find(x => x.ID == id);
+        Item item = _items.Find(x => x.ID == _id);
         return item.Icon;
     }
 
@@ -299,15 +298,15 @@ public class BoardManager : MonoBehaviour
 
     }
 
-    private async Task RemoveFieldsAsync(List<(int, int)> toRemove)
+    private async Task RemoveFieldsAsync(List<(int, int)> _toRemove)
     {
         _sequenceHide = DOTween.Sequence();
-        foreach ((int, int) cord in toRemove)
+        foreach ((int, int) cord in _toRemove)
         {
             _sequenceHide.Join(_rows[cord.Item2].Fields[cord.Item1].GetComponent<FieldContainer>().IconImage.DOFade(0, 0.25f));
         }
         await _sequenceHide.Play().AsyncWaitForCompletion();
-        foreach ((int, int) cord in toRemove)
+        foreach ((int, int) cord in _toRemove)
         {
             _rows[cord.Item2].Fields[cord.Item1].GetComponent<FieldContainer>().IconImage.sprite = GetRandomItem(out int id);
             _itemIdArray[cord.Item1, cord.Item2] = id;
