@@ -1,6 +1,8 @@
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,34 +12,26 @@ public class BoardManager : MonoBehaviour
     public int Height;
     [SerializeField] private GameObject _rowPrefab;
     [SerializeField] private GameObject _fieldPrefab;
+    [SerializeField] private AudioBank _audioBank;
     [SerializeField] private List<Item> _items;
 
     private int[,] _itemIdArray;
     private (int?, int?) _currentActiveFIeld = (null, null); //current x and y
     private ItemType _currentFieldType = ItemType.Normal;
     private List<RowController> _rows = new List<RowController>();
+    private AudioSource _audioSource;
+    private Sequence _sequenceHide;
+
     void Start()
     {
+        DOTween.Init();
+        _audioSource = GetComponent<AudioSource>();
         _itemIdArray = new int[Width, Height];
         InitializeBoard();
 
     }
 
     // Update is called once per frame
-    void Update()
-    {
-        /*string temp = "";
-        for (int y = 0; y < _itemIdArray.GetLength(0); y++)
-        {
-            for (int x = 0; x < _itemIdArray.GetLength(1); x++)
-            {
-                temp += _itemIdArray[x, y] + "|";
-            }
-            temp += "\n";
-        }
-        Debug.Log(temp);
-*/
-    }
     private void InitializeBoard()
     {
         for (int y = 0; y < Height; y++)
@@ -72,6 +66,7 @@ public class BoardManager : MonoBehaviour
 
     private void SetActiveField(GameObject field)
     {
+        _audioSource.PlayOneShot(_audioBank.GetSound(AudioType.Select).Sound);
         GetFieldPos(field, out int x, out int y);
         //is current null then set clicked field current
         if (_currentActiveFIeld.Item1 == null)
@@ -126,27 +121,21 @@ public class BoardManager : MonoBehaviour
             {
                 if (y == _currentActiveFIeld.Item2 - 1)
                 {
-                    Debug.Log("CanSwitch1");
                     Swap(field, x, y);
                 }
                 else if (y == _currentActiveFIeld.Item2 + 1)
                 {
-                    Debug.Log("CanSwitch2");
                     Swap(field, x, y);
-
                 }
             }
             if (y == _currentActiveFIeld.Item2)
             {
                 if (x == _currentActiveFIeld.Item1 - 1)
                 {
-                    Debug.Log("CanSwitch3");
                     Swap(field, x, y);
-
                 }
                 else if (x == _currentActiveFIeld.Item1 + 1)
                 {
-                    Debug.Log("CanSwitch4");
                     Swap(field, x, y);
                 }
             }
@@ -182,7 +171,7 @@ public class BoardManager : MonoBehaviour
     private void DestroySameType(int x, int y)
     {
         int IdToFind = 99;
-        if ((GetItemType(_itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value]) == ItemType.DestroyTheSame)) IdToFind = _itemIdArray[x, y]; 
+        if ((GetItemType(_itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value]) == ItemType.DestroyTheSame)) IdToFind = _itemIdArray[x, y];
         if ((GetItemType(_itemIdArray[x, y]) == ItemType.DestroyTheSame)) IdToFind = _itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value];
         List<(int, int)> toRemove = new List<(int, int)>();
         if (IdToFind != 99)
@@ -194,7 +183,7 @@ public class BoardManager : MonoBehaviour
         toRemove.Sort(new MyComparer());
         if (toRemove.Count > 0)
         {
-            RemoveFields(toRemove);
+            RemoveFieldsAsync(toRemove);
         }
     }
 
@@ -217,21 +206,21 @@ public class BoardManager : MonoBehaviour
         if ((GetItemType(_itemIdArray[_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value]) == ItemType.Bomb)) centers.Add((_currentActiveFIeld.Item1.Value, _currentActiveFIeld.Item2.Value));
         if ((GetItemType(_itemIdArray[x, y]) == ItemType.Bomb)) centers.Add((x, y));
         List<(int, int)> toRemove = new List<(int, int)>();
-
+        Debug.Log(centers.Count);
         foreach ((int, int) cord in centers)
         {
             for (int i = cord.Item1 - 1; i <= cord.Item1 + 1; i++)
             {
                 for (int j = cord.Item2 - 1; j <= cord.Item2 + 1; j++)
                 {
-                    if (!toRemove.Contains((i, j))) toRemove.Add((i, j));
+                    if (!toRemove.Contains((i, j)) && i >= 0 && i < Width && j >= 0 && j < Height) toRemove.Add((i, j));
                 }
             }
         }
         toRemove.Sort(new MyComparer());
         if (toRemove.Count > 0)
         {
-            RemoveFields(toRemove);
+            RemoveFieldsAsync(toRemove);
         }
     }
 
@@ -305,97 +294,28 @@ public class BoardManager : MonoBehaviour
         toRemove.Sort(new MyComparer());
         if (toRemove.Count > 0)
         {
-            RemoveFields(toRemove);
+            RemoveFieldsAsync(toRemove);
         }
 
     }
 
-    private void RemoveFields(List<(int, int)> toRemove)
+    private async Task RemoveFieldsAsync(List<(int, int)> toRemove)
     {
+        _sequenceHide = DOTween.Sequence();
         foreach ((int, int) cord in toRemove)
         {
-            //temporary 99 is empty field
-            _itemIdArray[cord.Item1, cord.Item2] = 99;
-            ShiftTiles(cord.Item1, cord.Item2);
+            _sequenceHide.Join(_rows[cord.Item2].Fields[cord.Item1].GetComponent<FieldContainer>().IconImage.DOFade(0, 0.25f));
         }
-        //AddPoints(toRemove);
+        await _sequenceHide.Play().AsyncWaitForCompletion();
+        foreach ((int, int) cord in toRemove)
+        {
+            _rows[cord.Item2].Fields[cord.Item1].GetComponent<FieldContainer>().IconImage.sprite = GetRandomItem(out int id);
+            _itemIdArray[cord.Item1, cord.Item2] = id;
+            _rows[cord.Item2].Fields[cord.Item1].GetComponent<FieldContainer>().IconImage.DOFade(1, 0.25f);
+
+        }
+        _audioSource.PlayOneShot(_audioBank.GetSound(AudioType.Destroy).Sound);
         VerifyBoard();
-    }
-
-    private void ShiftTiles(int x, int yStart, float shiftDelay = .03f)
-    {
-        Debug.Log($"START {x}|{yStart}");
-
-        List<(int, int)> ToShift = new List<(int, int)>();
-        int toMove = 0;
-        for (int y = yStart; y >= 0; y--)
-        {
-            if (_itemIdArray[x, y] == 99)
-            {
-                _rows[y].Fields[x].GetComponent<FieldContainer>().IconImage.sprite = null;
-                toMove++;
-            }
-            Debug.Log($"{x}|{y}");
-            ToShift.Add((x, y));
-            Debug.Log("Kutas");
-        }
-        /*        for (int i = 0; i < toMove; i++)
-                {
-                    for
-                }
-        */
-
-
-
-
-
-
-
-        List<(int, int)> ToRefil = new List<(int, int)>();
-        int nullCount = 0;
-        for (int y = yStart; y >= 0; y--)
-        {  // 1
-            if (_itemIdArray[x, y] == 99)
-            { // 2
-                _rows[y].Fields[x].GetComponent<FieldContainer>().IconImage.sprite = null;
-                nullCount++;
-            }
-            ToRefil.Add((x, y));
-        }
-
-        for (int i = 0; i < nullCount; i++)
-        {
-            //yield return new WaitForSeconds(shiftDelay);// 4
-            for (int k = 0; k < ToRefil.Count; k++)
-            { // 5
-                int id;
-                if (ToRefil[k].Item2 == 0)
-                {
-                    _rows[ToRefil[k].Item2].Fields[ToRefil[k].Item1].GetComponent<FieldContainer>().IconImage.sprite = GetRandomItem(out id);
-                    _itemIdArray[ToRefil[k].Item1, ToRefil[k].Item2] = id;
-                }
-                else
-                {
-
-                    _rows[ToRefil[k].Item2].Fields[ToRefil[k].Item1].GetComponent<FieldContainer>().IconImage.sprite = _rows[ToRefil[k].Item2 - 1].Fields[ToRefil[k].Item1].GetComponent<FieldContainer>().IconImage.sprite;
-                    _rows[ToRefil[k].Item2 - 1].Fields[ToRefil[k].Item1].GetComponent<FieldContainer>().IconImage.sprite = GetRandomItem(out id);
-                    _itemIdArray[ToRefil[k].Item1, ToRefil[k].Item2] = _itemIdArray[ToRefil[k].Item1, ToRefil[k].Item2 - 1];
-                    _itemIdArray[ToRefil[k].Item1, ToRefil[k].Item2 - 1] = id; // 6
-                }
-            }
-        }
-        //throw new NotImplementedException();
-    }
-
-
-    private void Slide(List<(int, int)> temp)
-    {
-        throw new NotImplementedException();
-    }
-
-    private void AddPoints(List<(int, int)> toRemove)
-    {
-        throw new NotImplementedException();
     }
 }
 public class MyComparer : IComparer<(int, int)>
