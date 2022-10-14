@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 307c1125e7086434c9e05a094add839d, type: 3}
+  m_Name: BoardCompononets
+  m_EditorClassIdentifier: 
+  BoardPrefab: {fileID: 5359068872986012729, guid: 456d81cabb050a840b61a2f3a27e93db, type: 3}
+  RowPrefab: {fileID: 7664951780852952968, guid: 8383e03b93a3dde468fcdccd6cc0c4df, type: 3}
+  FieldPrefab: {fileID: 6243097925910937705, guid: d35ce3d242d4b924fb91d182692218d0, type: 3}
+  AudioBank: {fileID: 11400000, guid: a8ae1c28bd4372f4ba5e9918a9755264, type: 2}
+  Items:
+  - {fileID: 11400000, guid: 32bcdef42cdc07042969f1be62c74cf0, type: 2}
+  - {fileID: 11400000, guid: cb8986db91b1f664792b7950b6269a51, type: 2}
+  - {fileID: 11400000, guid: 952b60175a46c02428d69722bf2a06c4, type: 2}
+  - {fileID: 11400000, guid: 2a5e06f6c10e84c4f8e26e94ea127536, type: 2}
+  - {fileID: 11400000, guid: 90962fa19e78af14da03b634da0446c6, type: 2}
+  - {fileID: 11400000, guid: 5ebf39d1b6aa2724c89d8842f3c1d021, type: 2}
+  - {fileID: 11400000, guid: 6af0b169233734147ad34adb1664ccfd, type: 2}
