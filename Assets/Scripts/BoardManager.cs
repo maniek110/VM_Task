@@ -19,7 +19,7 @@ public class BoardManager
     private BoardViewController boardViewController;
 
     [Inject]
-    public BoardManager(BoardCompononets _boardCompononets,Transform _targetParent)
+    public BoardManager(BoardCompononets _boardCompononets, Transform _targetParent)
     {
         boardCompononets = _boardCompononets;
         Init(_targetParent);
@@ -69,7 +69,7 @@ public class BoardManager
             rows.Add(CurrRow);
         }
 
-        boardViewController.Rows=rows;
+        boardViewController.Rows = rows;
         return itemIdArray;
     }
 
@@ -131,7 +131,6 @@ public class BoardManager
                 }
             }
         }
-
     }
 
     private void Swap(GameObject field, int x, int y)
@@ -222,11 +221,12 @@ public class BoardManager
 
     private void DeactivateField()
     {
-        boardViewController.ActivateField(_currentActiveFIeld.Item2.Value, _currentActiveFIeld.Item1.Value);
+        boardViewController.ActivateField(_currentActiveFIeld.Item2.Value, _currentActiveFIeld.Item1.Value, false);
         _currentActiveFIeld.Item2 = null;
         _currentActiveFIeld.Item1 = null;
     }
 
+    [Obsolete]
     private Sprite GetRandomItem(List<Item> _items, out int _id)
     {
         _id = 0;
@@ -283,21 +283,34 @@ public class BoardManager
         toRemove.Sort(new MyComparer());
         if (toRemove.Count > 0)
         {
-            RemoveFieldsAsync(toRemove);
+            Task task = RemoveFieldsAsync(toRemove);
+            task.Start();
+            task.Wait();
+            RefreshBoard();
         }
+    }
 
+    private void RefreshBoard()
+    {
+        for (int y = 0; y < _itemIdArray.GetLength(0); y++)
+        {
+            for (int x = 0; x < _itemIdArray.GetLength(1); x++)
+            {
+                boardViewController.SwapSprite(y, x, boardCompononets.Items.Find(temp => temp.ID == _itemIdArray[x, y]).Icon);
+            }
+        }
     }
 
     private async Task RemoveFieldsAsync(List<(int, int)> _toRemove)
     {
-        boardViewController.RunDotweenAsync(_toRemove); 
+        await boardViewController.RunDotweenAsync(_toRemove);
         foreach ((int, int) cord in _toRemove)
         {
             boardViewController.SwapSprite(cord.Item2, cord.Item1, GetRandomItem(boardCompononets.Items, out int id));
             boardViewController.FadeField(cord.Item2, cord.Item1);
 
         }
-        boardViewController.AudioSource.PlayOneShot(boardCompononets.AudioBank.GetSound(AudioType.Destroy).Sound);
+        boardViewController.PlaySound(boardCompononets.AudioBank.GetSound(AudioType.Destroy).Sound);
         VerifyBoard();
     }
 }

@@ -12,7 +12,6 @@ public class BoardViewController : MonoBehaviour
     private AudioSource _audioSource;
 
     public List<RowController> Rows { get => _rows; set => _rows = value; }
-    public AudioSource AudioSource { get => _audioSource; set => _audioSource = value; }
     private Sequence _sequenceHide;
 
     // Start is called before the first frame update
@@ -60,6 +59,12 @@ public class BoardViewController : MonoBehaviour
         tempFieldContainer.BorderImage.gameObject.SetActive(_value);
     }
 
+    internal void ActivateField(int y, int x, bool v)
+    {
+        FieldContainer tempFieldContainer = _rows[x].Fields[y].GetComponent<FieldContainer>();
+        tempFieldContainer.BorderImage.gameObject.SetActive(false);
+    }
+
     internal void SwapSprite(GameObject _field, Sprite _sprite)
     {
         _field.GetComponent<FieldContainer>().IconImage.sprite = _sprite;
@@ -70,12 +75,6 @@ public class BoardViewController : MonoBehaviour
         _rows[y].Fields[x].GetComponent<FieldContainer>().IconImage.sprite = _sprite;
     }
 
-    internal void ActivateField(int y, int x)
-    {
-        FieldContainer tempFieldContainer = _rows[x].Fields[y].GetComponent<FieldContainer>();
-        tempFieldContainer.BorderImage.gameObject.SetActive(!tempFieldContainer.BorderImage.gameObject.activeSelf);
-    }
-
     internal async Task RunDotweenAsync(List<(int, int)> _toRemove)
     {
         _sequenceHide = DOTween.Sequence();
@@ -84,7 +83,6 @@ public class BoardViewController : MonoBehaviour
             _sequenceHide.Join(_rows[cord.Item2].Fields[cord.Item1].GetComponent<FieldContainer>().IconImage.DOFade(0, 0.25f));
         }
         await _sequenceHide.Play().AsyncWaitForCompletion();
-        
     }
 
     internal void FadeField(int y, int x)
